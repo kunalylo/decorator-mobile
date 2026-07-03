@@ -1,0 +1,88 @@
+{
+  "expo": {
+    "name": "FatafatDecor Partner",
+    "slug": "fatafatdecor-decorator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fdf2f8"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "in.co.ylo.fatafatdecor.decorator",
+      "buildNumber": "1",
+      "newArchEnabled": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "FatafatDecor Partner uses your camera to take a selfie check-in proof at the customer's location and to photograph the finished decoration.",
+        "NSPhotoLibraryUsageDescription": "FatafatDecor Partner accesses your photo library so you can upload photos of the completed decoration for the customer and office records.",
+        "NSLocationWhenInUseUsageDescription": "FatafatDecor Partner uses your location to share live tracking with the customer while you are on the way to and at the job.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "in.co.ylo.fatafatdecor.decorator",
+      "versionCode": 1,
+      "newArchEnabled": true,
+      "softwareKeyboardLayoutMode": "pan",
+      "splash": {
+        "image": "./assets/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#fdf2f8"
+      },
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundColor": "#f7bad2"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET",
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FatafatDecor Partner accesses your photo library so you can upload photos of the completed decoration.",
+          "cameraPermission": "FatafatDecor Partner uses your camera for selfie check-in proof and photos of the finished decoration."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "FatafatDecor Partner needs your location to share live tracking with the customer during a job."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ec4899",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ],
+      "expo-font"
+    ],
+    "scheme": "fatafatdecorpartner",
+    "owner": "kunal_ylo",
+    "extra": {
+      "eas": {
+        "projectId": "7b8c5081-81be-4324-9dfe-218c36f69c00"
+      }
+    }
+  }
+}
