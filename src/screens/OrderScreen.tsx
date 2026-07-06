@@ -99,7 +99,7 @@ export default function OrderScreen() {
           <TouchableOpacity onPress={() => callCustomer(o.customer?.phone)}>
             <Row label="Phone" value={o.customer?.phone || '—'} valueColor={aurora.pink} />
           </TouchableOpacity>
-          <Row label="Slot" value={o.delivery_slot ? `${o.delivery_slot.date} at ${o.delivery_slot.hour}:00` : '—'} />
+          <Row label="Slot" value={o.delivery_slot ? `${o.delivery_slot.date} · ${o.delivery_slot.hour}:00–${o.delivery_slot.hour + 2}:00` : '—'} />
           {/* Decorators never see the order total — only what they must collect on delivery. */}
           <View style={styles.collectRow}>
             <Text style={styles.collectLabel}>Collect on delivery</Text>

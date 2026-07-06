@@ -9,6 +9,11 @@ export function fmtSlot(slot?: { date: string; hour: number } | null) {
   return `${slot.date} · ${slot.hour}:00 – ${slot.hour + 1}:00`
 }
 
+// Display window for a booked slot. Decoration jobs occupy 2 hours on site; gift deliveries 1.
+export function slotWindow(slot?: { date?: string; hour?: number } | null, hours = 2): string {
+  return slot && slot.hour !== undefined && slot.hour !== null ? `${slot.hour}:00–${slot.hour + hours}:00` : '—'
+}
+
 export function fmtCurrency(n: number) {
   return `₹${Math.round(Number(n) || 0).toLocaleString('en-IN')}`
 }

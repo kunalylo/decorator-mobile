@@ -8,7 +8,7 @@ import { AuroraBackground } from '../components/Aurora'
 import BottomNav from '../components/BottomNav'
 import Toast from '../components/Toast'
 import { useSafeArea } from '../lib/useSafeArea'
-import { rs, shortId, toCollect } from '../lib/utils'
+import { rs, shortId, toCollect, slotWindow } from '../lib/utils'
 
 function statusColor(s: string) {
   return s === 'delivered' ? { bg: '#dcfce7', text: '#16a34a' } : { bg: '#fce7f3', text: '#db2777' }
@@ -67,7 +67,7 @@ export default function CalendarScreen() {
                 <TouchableOpacity key={o.id} style={styles.listCard} activeOpacity={0.8} onPress={() => openOrderDetail(o.id)}>
                   <View style={styles.clockIcon}><Text style={{ fontSize: 16 }}>🕐</Text></View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.listTitle}>{o.delivery_slot?.hour}:00 - {(o.delivery_slot?.hour ?? 0) + 1}:00</Text>
+                    <Text style={styles.listTitle}>{slotWindow(o.delivery_slot)}</Text>
                     <Text style={styles.listSub}>#{shortId(o.id)} • Collect {rs(toCollect(o))}</Text>
                   </View>
                   <View style={[styles.statusPill, { backgroundColor: c.bg }]}><Text style={[styles.statusPillText, { color: c.text }]}>{o.delivery_status}</Text></View>

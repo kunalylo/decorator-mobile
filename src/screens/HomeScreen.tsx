@@ -9,7 +9,7 @@ import { AuroraBackground, GradientView } from '../components/Aurora'
 import BottomNav from '../components/BottomNav'
 import Toast from '../components/Toast'
 import { useSafeArea } from '../lib/useSafeArea'
-import { greetingByTime, rs, formatTimer, shortId, safeUri, toCollect } from '../lib/utils'
+import { greetingByTime, rs, formatTimer, shortId, safeUri, toCollect, slotWindow } from '../lib/utils'
 import { navigate } from '../navigation'
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -110,7 +110,7 @@ export default function HomeScreen() {
                     <Text style={styles.requestId}>Order #{shortId(o.id)}</Text>
                     <Text style={styles.requestAddr} numberOfLines={1}>📍 {o.delivery_address || 'Address not set'}</Text>
                     {o.delivery_slot && (
-                      <Text style={styles.requestSlot}>{o.delivery_slot.date} · {o.delivery_slot.hour}:00–{o.delivery_slot.hour + 1}:00</Text>
+                      <Text style={styles.requestSlot}>{o.delivery_slot.date} · {slotWindow(o.delivery_slot)}</Text>
                     )}
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
@@ -206,7 +206,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.listTitle}>Order #{shortId(o.id)}</Text>
-                  <Text style={styles.listSub}>{o.delivery_slot?.hour}:00 - {(o.delivery_slot?.hour ?? 0) + 1}:00</Text>
+                  <Text style={styles.listSub}>{slotWindow(o.delivery_slot)}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={styles.listPrice}>{toCollect(o) > 0 ? `Collect ${rs(toCollect(o))}` : 'Paid'}</Text>
@@ -226,7 +226,7 @@ export default function HomeScreen() {
                 <View style={[styles.listIcon, { backgroundColor: '#fce7f3' }]}><Text style={{ fontSize: 18 }}>🚚</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.listTitle}>#{shortId(o.id)}</Text>
-                  <Text style={styles.listSub}>{o.delivery_slot?.date} at {o.delivery_slot?.hour}:00</Text>
+                  <Text style={styles.listSub}>{o.delivery_slot?.date} · {slotWindow(o.delivery_slot)}</Text>
                 </View>
                 <Text style={{ color: '#d1d5db', fontSize: 18 }}>›</Text>
               </TouchableOpacity>
