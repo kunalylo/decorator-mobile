@@ -252,8 +252,15 @@ function ItemsChecklist({ order, isReferenceFlow }: { order: any; isReferenceFlo
             {list.map((it: any, i: number) => (
               <View key={it.id || `${cat}-${i}`} style={styles.checkRow}>
                 <Text style={styles.checkBox}>☑</Text>
+                {it.item_image_url ? (
+                  <Image
+                    source={{ uri: safeUri(`${it.item_image_url}?tr=w-96,h-96,c-maintain_ratio`) }}
+                    style={styles.itemThumb}
+                  />
+                ) : (
+                  <View style={[styles.itemThumb, styles.itemThumbEmpty]} />
+                )}
                 <Text style={styles.checkText}><Text style={{ fontWeight: '800' }}>{it.quantity}×</Text> {it.name}</Text>
-                {it.matched_sku_code ? <Text style={styles.skuCode} numberOfLines={1}>{it.matched_sku_code}</Text> : null}
               </View>
             ))}
           </View>
@@ -347,6 +354,8 @@ const styles = StyleSheet.create({
   refCellEmpty: { fontSize: 10, color: aurora.textFaint },
   refCellLabel: { fontSize: 9, fontWeight: '700', color: '#6b7280', textAlign: 'center', marginTop: 4, lineHeight: 12 },
   skuCode: { fontSize: 9, color: aurora.textFaint, fontVariant: ['tabular-nums'], maxWidth: 120 },
+  itemThumb: { width: 42, height: 42, borderRadius: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb' },
+  itemThumbEmpty: { backgroundColor: '#f9fafb', borderStyle: 'dashed' },
   refImg: { width: '100%', height: 200, borderRadius: 12, backgroundColor: '#fff' },
   decoratedImg: { width: '100%', height: 170, borderRadius: 14, backgroundColor: '#fce7f3' },
   centerHint: { fontSize: 11, color: '#6b7280', textAlign: 'center', marginTop: 8 },
