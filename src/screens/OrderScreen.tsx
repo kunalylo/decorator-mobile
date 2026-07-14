@@ -260,7 +260,14 @@ function ItemsChecklist({ order, isReferenceFlow }: { order: any; isReferenceFlo
                 ) : (
                   <View style={[styles.itemThumb, styles.itemThumbEmpty]} />
                 )}
-                <Text style={styles.checkText}><Text style={{ fontWeight: '800' }}>{it.quantity}×</Text> {it.name}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.checkText}><Text style={{ fontWeight: '800' }}>{it.quantity}×</Text> {it.name}</Text>
+                  {(it.description || it.placement) ? (
+                    <Text style={styles.itemDesc} numberOfLines={2}>
+                      {it.description}{it.placement ? ` · ${it.placement}` : ''}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
             ))}
           </View>
@@ -280,7 +287,7 @@ function ItemsChecklist({ order, isReferenceFlow }: { order: any; isReferenceFlo
         {items.map((it: any, i: number) => (
           <View key={i} style={styles.checkRow}>
             <Text style={[styles.checkBox, { color: '#22c55e' }]}>✓</Text>
-            <Text style={styles.checkText}>{it.name}{it.color ? ` (${it.color})` : ''}</Text>
+            <Text style={[styles.checkText, { flex: 1 }]}>{it.name}{it.color ? ` (${it.color})` : ''}</Text>
             <Text style={styles.qtyMuted}>x{it.quantity}</Text>
           </View>
         ))}
@@ -295,7 +302,7 @@ function ItemsChecklist({ order, isReferenceFlow }: { order: any; isReferenceFlo
           {kitItems.map((it: any, i: number) => (
             <View key={`k${i}`} style={styles.checkRow}>
               <Text style={styles.checkBox}>☑</Text>
-              <Text style={styles.checkText}>{it.quantity}x {it.name}{it.color ? ` (${it.color})` : ''}</Text>
+              <Text style={[styles.checkText, { flex: 1 }]}>{it.quantity}x {it.name}{it.color ? ` (${it.color})` : ''}</Text>
             </View>
           ))}
         </>
@@ -306,7 +313,7 @@ function ItemsChecklist({ order, isReferenceFlow }: { order: any; isReferenceFlo
           {addonItems.map((it: any, i: number) => (
             <View key={`a${i}`} style={styles.checkRow}>
               <Text style={[styles.checkBox, { color: '#a78bfa' }]}>＋</Text>
-              <Text style={styles.checkText}>{it.quantity}x {it.name}{it.color ? ` (${it.color})` : ''}</Text>
+              <Text style={[styles.checkText, { flex: 1 }]}>{it.quantity}x {it.name}{it.color ? ` (${it.color})` : ''}</Text>
             </View>
           ))}
         </>
@@ -385,7 +392,8 @@ const styles = StyleSheet.create({
   catLabel: { fontSize: 10.5, fontWeight: '800', color: aurora.pink, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 2 },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   checkBox: { fontSize: 15, color: aurora.pink },
-  checkText: { fontSize: 12.5, color: '#4b5563', flex: 1 },
+  checkText: { fontSize: 12.5, color: '#4b5563' },
+  itemDesc: { fontSize: 10, color: '#9ca3af', fontStyle: 'italic', lineHeight: 13, marginTop: 1 },
   qtyMuted: { fontSize: 11, color: aurora.textFaint },
 
   giftRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f9e8f1' },
