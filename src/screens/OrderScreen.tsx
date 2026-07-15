@@ -239,12 +239,11 @@ function ItemsChecklist({ order, isReferenceFlow }: { order: any; isReferenceFlo
       const cat = it.category || 'Other'
       ;(grouped[cat] = grouped[cat] || []).push(it)
     })
-    const totalUnits = items.reduce((s: number, i: any) => s + (Number(i.quantity) || 0), 0)
     return (
       <View style={styles.card}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-          <Text style={styles.cardTitlePink}>Procurement Checklist</Text>
-          <Text style={styles.tinyMuted}>{totalUnits} units · {items.length} SKUs</Text>
+          <Text style={styles.cardTitlePink}>Items to Recreate This Look</Text>
+          <Text style={styles.tinyMuted}>{items.length} items</Text>
         </View>
         {Object.entries(grouped).map(([cat, list]) => (
           <View key={cat} style={{ marginBottom: 8 }}>
@@ -254,18 +253,21 @@ function ItemsChecklist({ order, isReferenceFlow }: { order: any; isReferenceFlo
                 <Text style={styles.checkBox}>☑</Text>
                 {it.item_image_url ? (
                   <Image
-                    source={{ uri: safeUri(`${it.item_image_url}?tr=w-96,h-96,c-maintain_ratio`) }}
+                    source={{ uri: safeUri(`${it.item_image_url}?tr=w-112,h-112,c-maintain_ratio`) }}
                     style={styles.itemThumb}
                   />
                 ) : (
                   <View style={[styles.itemThumb, styles.itemThumbEmpty]} />
                 )}
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.checkText}><Text style={{ fontWeight: '800' }}>{it.quantity}×</Text> {it.name}</Text>
-                  {(it.description || it.placement) ? (
-                    <Text style={styles.itemDesc} numberOfLines={2}>
-                      {it.description}{it.placement ? ` · ${it.placement}` : ''}
-                    </Text>
+                  <Text style={styles.checkTextBold}>{it.name}</Text>
+                  {it.description ? (
+                    <Text style={styles.itemDesc} numberOfLines={2}>{it.description}</Text>
+                  ) : null}
+                  {it.placement ? (
+                    <View style={styles.placementChip}>
+                      <Text style={styles.placementChipText}>📍 {it.placement}</Text>
+                    </View>
                   ) : null}
                 </View>
               </View>
@@ -393,7 +395,10 @@ const styles = StyleSheet.create({
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   checkBox: { fontSize: 15, color: aurora.pink },
   checkText: { fontSize: 12.5, color: '#4b5563' },
-  itemDesc: { fontSize: 10, color: '#9ca3af', fontStyle: 'italic', lineHeight: 13, marginTop: 1 },
+  checkTextBold: { fontSize: 12.5, color: '#1f2937', fontWeight: '700' },
+  itemDesc: { fontSize: 10, color: '#6b7280', fontStyle: 'italic', lineHeight: 13, marginTop: 1 },
+  placementChip: { alignSelf: 'flex-start', backgroundColor: '#fdf2f8', borderWidth: 1, borderColor: '#fce7f3', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginTop: 3 },
+  placementChipText: { fontSize: 9, fontWeight: '800', color: '#db2777' },
   qtyMuted: { fontSize: 11, color: aurora.textFaint },
 
   giftRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f9e8f1' },
