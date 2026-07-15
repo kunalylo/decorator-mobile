@@ -9,7 +9,8 @@ import { AuroraBackground, GradientView } from '../components/Aurora'
 import BottomNav from '../components/BottomNav'
 import Toast from '../components/Toast'
 import { useSafeArea } from '../lib/useSafeArea'
-import { greetingByTime, rs, formatTimer, shortId, safeUri, toCollect, slotWindow } from '../lib/utils'
+import { greetingByTime, rs, formatTimer, shortId, safeUri, ikThumb, toCollect, slotWindow } from '../lib/utils'
+import { useCountdown } from '../lib/useCountdown'
 import { navigate } from '../navigation'
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -20,10 +21,22 @@ function statusColor(s: string) {
   return STATUS_COLORS[s] || { bg: '#fce7f3', text: '#db2777' }
 }
 
+// Isolated so the 1s countdown re-renders ONLY this banner, never the whole dashboard.
+const TimerBanner = React.memo(function TimerBanner({ endAt }: { endAt: number | null }) {
+  const seconds = useCountdown(endAt)
+  return (
+    <TouchableOpacity style={styles.timerBanner} activeOpacity={0.85} onPress={() => navigate('ActiveJob')}>
+      <Text style={{ fontSize: 22 }}>⏱️</Text>
+      <Text style={styles.timerValue}>{formatTimer(seconds)}</Text>
+      <Text style={styles.timerHint}>Active Job — Tap to view</Text>
+    </TouchableOpacity>
+  )
+})
+
 export default function HomeScreen() {
   const {
     dpUser, dashboard, orders, pendingOrders, pendingGiftOrders, activeGiftOrders, loading,
-    activeTimerOrderId, timerSeconds, refreshAll, refreshDashboard,
+    activeTimerOrderId, timerEndAt, refreshAll, refreshDashboard,
     handleAcceptOrder, handleDeclineOrder, handleAcceptGiftOrder, handleDeclineGiftOrder,
     openOrderDetail, openGiftOrderDetail, showToast,
   } = useApp()
@@ -72,13 +85,7 @@ export default function HomeScreen() {
         </GradientView>
 
         {/* Active job timer banner */}
-        {activeTimerOrderId && (
-          <TouchableOpacity style={styles.timerBanner} activeOpacity={0.85} onPress={() => navigate('ActiveJob')}>
-            <Text style={{ fontSize: 22 }}>⏱️</Text>
-            <Text style={styles.timerValue}>{formatTimer(timerSeconds)}</Text>
-            <Text style={styles.timerHint}>Active Job — Tap to view</Text>
-          </TouchableOpacity>
-        )}
+        {activeTimerOrderId && <TimerBanner endAt={timerEndAt} />}
 
         {/* Stats */}
         <View style={[styles.statsRow, { marginTop: activeTimerOrderId ? 12 : -24 }]}>
@@ -162,7 +169,7 @@ export default function HomeScreen() {
                 {(o.gift_items || []).some((g: any) => g.image_url) && (
                   <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
                     {(o.gift_items || []).filter((g: any) => g.image_url).slice(0, 4).map((g: any, i: number) => (
-                      <Image key={i} source={{ uri: safeUri(g.image_url) }} style={styles.giftThumb} />
+                      <Image key={i} source={{ uri: safeUri(ikThumb(g.image_url, 160)) }} style={styles.giftThumb} />
                     ))}
                   </View>
                 )}

@@ -95,9 +95,9 @@ interface AppContextType {
   // selfie + otp flow
   selfieImage: string | null; setSelfieImage: (s: string | null) => void
   otpInput: string; setOtpInput: (s: string) => void
-  // active-job timer
+  // active-job timer — stable end timestamp; screens tick locally via useCountdown()
   activeTimerOrderId: string | null
-  timerSeconds: number
+  timerEndAt: number | null
 
   showToast: (msg: string, type?: 'success' | 'error' | 'info') => void
   refreshAll: () => void
@@ -165,14 +165,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [otpInput, setOtpInput]             = useState('')
   const [giftOtpInput, setGiftOtpInput]     = useState('')
   const [activeTimerOrderId, setActiveTimerOrderId] = useState<string | null>(null)
-  const [timerSeconds, setTimerSeconds]     = useState(0)
+  const [timerEndAt, setTimerEndAt]         = useState<number | null>(null)
   const [cities, setCities]                 = useState<City[]>([])
 
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const seenOrderIds = useRef<Set<string>>(new Set())
   const primedRef = useRef(false)
   const authExpiredFiring = useRef(false)
+  const lastDashJson = useRef('')
 
   // ── Toast ──────────────────────────────────────────────────────────────
   const showToast = useCallback((msg: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -224,7 +224,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const remaining = Math.floor((endTime - Date.now()) / 1000)
           if (remaining > 0) {
             setActiveTimerOrderId(orderId)
-            setTimerSeconds(remaining)
+            setTimerEndAt(endTime)
             // Reload the order so the Active Job screen + "Complete" work after an app relaunch.
             api.get(`dp/order-detail/${orderId}`).then((d: any) => { if (d && !d.error) setSelectedOrder(d) }).catch(() => {})
           } else {
@@ -253,9 +253,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setEarnings(null)
     setCalendarData(null)
     setActiveTimerOrderId(null)
-    setTimerSeconds(0)
+    setTimerEndAt(null)
     setSelfieImage(null)
     setOtpInput('')
+    lastDashJson.current = ''
   }, [])
 
   useEffect(() => {
@@ -281,6 +282,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!dpUser?.id) return
     api.get(`dp/dashboard/${dpUser.id}`).then((d: any) => {
       if (d?.error) return
+      // Identical payload (the common case on a 15s poll) → skip every setState so
+      // the whole tree doesn't re-render for nothing.
+      const fingerprint = JSON.stringify(d)
+      if (fingerprint === lastDashJson.current) return
+      lastDashJson.current = fingerprint
       setDashboard(d)
       const pending = d.pending_orders || []
       const pendingGifts = d.pending_gift_orders || []
@@ -404,23 +410,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; sub?.remove() }
   }, [dpUser?.id, activeTrackingKey])
 
-  // ── Active-job timer countdown ─────────────────────────────────────────────
+  // ── Active-job timer expiry ────────────────────────────────────────────────
+  // No 1s interval here: screens tick locally off the stable timerEndAt (useCountdown).
+  // The context only needs ONE timeout to fire the "time is up" side effect.
   useEffect(() => {
-    if (!activeTimerOrderId) return
-    timerIntervalRef.current = setInterval(() => {
-      setTimerSeconds((prev) => {
-        if (prev <= 1) {
-          if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
-          storage.remove(TIMER_KEY)
-          showToast('Time is up! Your booked slot has ended.', 'error')
-          setActiveTimerOrderId(null)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current) }
-  }, [activeTimerOrderId, showToast])
+    if (!activeTimerOrderId || !timerEndAt) return
+    const expire = () => {
+      storage.remove(TIMER_KEY)
+      showToast('Time is up! Your booked slot has ended.', 'error')
+      setActiveTimerOrderId(null)
+      setTimerEndAt(null)
+    }
+    const ms = timerEndAt - Date.now()
+    if (ms <= 0) { expire(); return }
+    const t = setTimeout(expire, ms)
+    return () => clearTimeout(t)
+  }, [activeTimerOrderId, timerEndAt, showToast])
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   const handleLogin = useCallback(async (phone: string, password: string) => {
@@ -551,7 +556,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       showToast('OTP verified. Decoration started.', 'success')
       const endTime = Date.now() + JOB_DURATION_SECONDS * 1000
       await storage.set(TIMER_KEY, JSON.stringify({ orderId, endTime }))
-      setTimerSeconds(JOB_DURATION_SECONDS)
+      setTimerEndAt(endTime)
       setActiveTimerOrderId(orderId)
       setSelfieImage(null)
       setOtpInput('')
@@ -564,9 +569,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ── Add 5 more minutes to the running job timer (persists the new end time) ──
   const extendTimer = useCallback(() => {
     if (!activeTimerOrderId) return
-    setTimerSeconds((prev) => {
-      const next = prev + TIMER_EXTEND_SECONDS
-      storage.set(TIMER_KEY, JSON.stringify({ orderId: activeTimerOrderId, endTime: Date.now() + next * 1000 }))
+    setTimerEndAt((prev) => {
+      const next = Math.max(prev ?? 0, Date.now()) + TIMER_EXTEND_SECONDS * 1000
+      storage.set(TIMER_KEY, JSON.stringify({ orderId: activeTimerOrderId, endTime: next }))
       return next
     })
     showToast('Added 5 minutes', 'success')
@@ -579,9 +584,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const data: any = await api.post('dp/complete', { order_id: orderId })
       if (data.error) { showToast(data.error, 'error'); return }
       await storage.remove(TIMER_KEY)
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
       setActiveTimerOrderId(null)
-      setTimerSeconds(0)
+      setTimerEndAt(null)
       setSelectedOrder((prev) => prev ? { ...prev, delivery_status: 'delivered' } : prev)
       showToast('Job completed!', 'success')
       refreshAll()
@@ -808,7 +812,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedGiftOrder, setSelectedGiftOrder,
     earnings, calendarData, calMonth, setCalMonth,
     selfieImage, setSelfieImage, otpInput, setOtpInput,
-    activeTimerOrderId, timerSeconds, extendTimer,
+    activeTimerOrderId, timerEndAt, extendTimer,
     showToast, refreshAll, refreshDashboard,
     handleLogin, handleLogout,
     openOrderDetail, handleAcceptOrder, handleDeclineOrder,

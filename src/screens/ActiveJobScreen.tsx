@@ -8,10 +8,12 @@ import { AuroraBackground } from '../components/Aurora'
 import Toast from '../components/Toast'
 import { useSafeArea } from '../lib/useSafeArea'
 import { rs, formatTimer, shortId, toCollect } from '../lib/utils'
+import { useCountdown } from '../lib/useCountdown'
 import { navigate } from '../navigation'
 
 export default function ActiveJobScreen() {
-  const { selectedOrder: o, timerSeconds, loading, handleComplete, callCustomer, extendTimer } = useApp()
+  const { selectedOrder: o, timerEndAt, loading, handleComplete, callCustomer, extendTimer } = useApp()
+  const timerSeconds = useCountdown(timerEndAt)
   const { headerTop } = useSafeArea()
 
   // Timer urgency tint

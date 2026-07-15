@@ -7,7 +7,7 @@ import { aurora, fonts } from '../lib/theme'
 import { AuroraBackground } from '../components/Aurora'
 import Toast from '../components/Toast'
 import { useSafeArea } from '../lib/useSafeArea'
-import { safeUri } from '../lib/utils'
+import { safeUri, ikThumb } from '../lib/utils'
 import { GIFT_STATUS_STEPS, GIFT_STATUS_LABELS } from '../lib/constants'
 import { navigate } from '../navigation'
 
@@ -74,7 +74,7 @@ export default function GiftOrderScreen() {
           {(o.gift_items || []).map((g: any, i: number) => (
             <View key={i} style={styles.giftRow}>
               {g.image_url
-                ? <Image source={{ uri: safeUri(g.image_url) }} style={styles.giftThumb} />
+                ? <Image source={{ uri: safeUri(ikThumb(g.image_url, 160)) }} style={styles.giftThumb} />
                 : <View style={styles.giftThumbEmpty}><Text style={{ fontSize: 20 }}>🎁</Text></View>}
               <Text style={[styles.giftName, { flex: 1 }]}>{g.quantity}× {g.name}</Text>
             </View>

@@ -8,15 +8,17 @@ import { aurora, fonts } from '../lib/theme'
 import { AuroraBackground, GradientButton } from '../components/Aurora'
 import Toast from '../components/Toast'
 import { useSafeArea } from '../lib/useSafeArea'
-import { rs, formatTimer, shortId, safeUri } from '../lib/utils'
+import { rs, formatTimer, shortId, safeUri, ikThumb } from '../lib/utils'
+import { useCountdown } from '../lib/useCountdown'
 import { navigate } from '../navigation'
 
 export default function OrderScreen() {
   const {
-    selectedOrder: o, loading, timerSeconds, extendTimer,
+    selectedOrder: o, loading, timerEndAt, extendTimer,
     handleStartNavigation, handleComplete, collectCash, collectOnline,
     uploadCompletionPhotos, removeCompletionPhoto, openMaps, callCustomer, showToast,
   } = useApp()
+  const timerSeconds = useCountdown(timerEndAt)
   const { headerTop } = useSafeArea()
 
   if (!o) {
@@ -50,7 +52,7 @@ export default function OrderScreen() {
         {isReferenceFlow && referenceImage && (
           <View style={[styles.card, styles.pinkCard]}>
             <Text style={styles.uppPink}>✦ Recreate This Look</Text>
-            <Image source={{ uri: safeUri(referenceImage) }} style={styles.refImg} resizeMode="cover" />
+            <Image source={{ uri: safeUri(ikThumb(referenceImage, 800)) }} style={styles.refImg} resizeMode="cover" />
             <Text style={styles.centerHint}>This is what the customer expects — match the style</Text>
           </View>
         )}
@@ -70,7 +72,7 @@ export default function OrderScreen() {
                 <View key={idx} style={styles.refCol}>
                   <View style={[styles.refCell, { borderColor: cell.border, backgroundColor: cell.tint }]}>
                     {cell.uri
-                      ? <Image source={{ uri: safeUri(cell.uri) }} style={styles.refCellImg} resizeMode="cover" />
+                      ? <Image source={{ uri: safeUri(ikThumb(cell.uri, 500)) }} style={styles.refCellImg} resizeMode="cover" />
                       : <Text style={styles.refCellEmpty}>{idx === 1 ? 'No photo' : '—'}</Text>}
                   </View>
                   <Text style={styles.refCellLabel}>{cell.label}{'\n'}{cell.sub}</Text>
@@ -90,7 +92,7 @@ export default function OrderScreen() {
 
         {/* Decorated preview (legacy single image) */}
         {!isReferenceFlow && o.decorated_image && (
-          <Image source={{ uri: safeUri(o.decorated_image) }} style={styles.decoratedImg} resizeMode="cover" />
+          <Image source={{ uri: safeUri(ikThumb(o.decorated_image, 800)) }} style={styles.decoratedImg} resizeMode="cover" />
         )}
 
         {/* Customer + order summary */}
@@ -156,7 +158,7 @@ export default function OrderScreen() {
               <View style={styles.photoGrid}>
                 {photos.map((p: any, i: number) => (
                   <View key={p.url || i} style={styles.photoThumbWrap}>
-                    <Image source={{ uri: safeUri(p.url) }} style={styles.photoThumb} />
+                    <Image source={{ uri: safeUri(ikThumb(p.url, 300)) }} style={styles.photoThumb} />
                     <TouchableOpacity style={styles.photoRemove} onPress={() => removeCompletionPhoto(o.id, i)}>
                       <Text style={{ color: '#fff', fontSize: 11, fontWeight: '900' }}>✕</Text>
                     </TouchableOpacity>

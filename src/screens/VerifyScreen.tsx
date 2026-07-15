@@ -22,7 +22,7 @@ export default function VerifyScreen() {
   }
 
   // OTP step unlocks once the selfie proof is uploaded (status moved to arrived).
-  const selfieUploaded = !!selfieImage && (o.delivery_status === 'arrived' || (o as any).selfie_proof)
+  const selfieUploaded = !!selfieImage && (o.delivery_status === 'arrived' || (o as any).selfie_proof || (o as any).selfie_proof_done)
   const otpValid = otpInput.length === 4 || otpInput.length === 6
 
   return (

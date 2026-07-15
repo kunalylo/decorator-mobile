@@ -59,6 +59,15 @@ export function safeUri(url?: string): string {
   return (url || '').replace(/ /g, '%20')
 }
 
+// Request a right-sized image from ImageKit instead of the full-resolution original.
+// AI/design images are 1024px+ (often 1–3 MB); decoding those into a 120px thumbnail
+// wastes memory and visibly janks list scrolling. Non-ImageKit URLs pass through.
+export function ikThumb(url: string | null | undefined, w: number): string {
+  if (!url) return ''
+  if (!url.includes('ik.imagekit.io')) return url
+  return `${url}${url.includes('?') ? '&' : '?'}tr=w-${w},q-80`
+}
+
 // Build a Google Maps driving-directions URL — prefers a pinned lat/lng,
 // falls back to text address, then a plain maps open.
 export function buildMapsUrl(o: any): string {
