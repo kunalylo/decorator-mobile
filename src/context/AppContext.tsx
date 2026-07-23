@@ -290,6 +290,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (fingerprint === lastDashJson.current) return
       lastDashJson.current = fingerprint
       setDashboard(d)
+      // Keep the stored profile in sync with the server — the SecureStore copy can go stale
+      // (city changed elsewhere, or a served city removed from admin) and otherwise shows an
+      // outdated "Your City".
+      if (d.delivery_person) {
+        setDpUserState((prev) => {
+          if (!prev) return prev
+          const s = d.delivery_person
+          if (prev.city === s.city && prev.rating === s.rating && prev.total_deliveries === s.total_deliveries && prev.is_active === s.is_active) return prev
+          const updated = { ...prev, city: s.city, rating: s.rating, total_deliveries: s.total_deliveries, is_active: s.is_active }
+          storage.set(USER_KEY, JSON.stringify(updated))
+          return updated
+        })
+      }
       const pending = d.pending_orders || []
       const pendingGifts = d.pending_gift_orders || []
       setPendingOrders(pending)
