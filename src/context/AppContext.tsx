@@ -133,6 +133,7 @@ interface AppContextType {
   cities: City[]
   updateCity: (city: string) => Promise<boolean>
   detectCity: (opts?: { announce?: boolean }) => Promise<void>
+  detectingLocation: boolean
 
   openMaps: (order: any) => void
   callCustomer: (phone?: string) => void
@@ -167,6 +168,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeTimerOrderId, setActiveTimerOrderId] = useState<string | null>(null)
   const [timerEndAt, setTimerEndAt]         = useState<number | null>(null)
   const [cities, setCities]                 = useState<City[]>([])
+  const [detectingLocation, setDetectingLocation] = useState(false)
 
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const seenOrderIds = useRef<Set<string>>(new Set())
@@ -334,19 +336,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Auto-detect the decorator's city from their CURRENT GPS location (built-in reverse geocoder,
   // no API key). Keeps city in sync with where they actually are, so a Pune decorator never gets
   // Ranchi orders. Silent: if permission is denied the manual city picker stays as the fallback.
+  // `announce=true` (the Profile button) gives feedback for EVERY outcome — permission off,
+  // GPS off, not-served, error — so the button never looks dead. The silent auto-call on login
+  // passes announce=false so it doesn't nag.
   const detectCity = useCallback(async (opts?: { announce?: boolean }): Promise<void> => {
+    const announce = !!opts?.announce
+    const say = (msg: string, type: 'success' | 'error' | 'info' = 'info') => { if (announce) showToast(msg, type) }
+    if (announce) setDetectingLocation(true)
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync()
-      if (status !== 'granted') return
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
-      let address = ''
+      const perm = await Location.requestForegroundPermissionsAsync()
+      if (perm.status !== 'granted') {
+        say(perm.canAskAgain
+          ? 'Location permission is needed to detect your city.'
+          : 'Location is off for this app. Enable it in Settings → FatafatDecor Partner → Location.', 'error')
+        return
+      }
+      let pos: Location.LocationObject
+      try {
+        pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
+      } catch {
+        say('Couldn’t get your location. Make sure GPS/location is on, then try again.', 'error'); return
+      }
+      let address = '', place = ''
       try {
         const places = await Location.reverseGeocodeAsync({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
         const p: any = places?.[0]
-        if (p) address = [p.city, p.district, p.subregion, p.region, p.name].filter(Boolean).join(', ')
-      } catch { /* geocoder unavailable — backend can still use lat/lng-derived city if any */ }
-      const data: any = await api.post('dp/detect-city', { lat: pos.coords.latitude, lng: pos.coords.longitude, address })
-      if (data?.error) return
+        if (p) {
+          place = p.city || p.subregion || p.district || ''
+          address = [p.city, p.district, p.subregion, p.region, p.name].filter(Boolean).join(', ')
+        }
+      } catch { /* geocoder unavailable — backend can still match on the raw place */ }
+      const data: any = await api.post('dp/detect-city', { lat: pos.coords.latitude, lng: pos.coords.longitude, address, city: place })
+      if (data?.error) { say(data.error, 'error'); return }
       if (data.city) {
         setDpUserState((prev) => {
           if (!prev) return prev
@@ -354,18 +375,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
           storage.set(USER_KEY, JSON.stringify(updated))
           return updated
         })
-        if (opts?.announce) {
-          showToast(data.served ? `📍 You're in ${data.city} — showing ${data.city} orders` : `📍 ${data.city} isn't a service area yet`, data.served ? 'success' : 'info')
-        }
+        say(`📍 You're in ${data.city} — now showing ${data.city} orders`, 'success')
+        refreshDashboard()   // surface the new city's orders immediately
+      } else {
+        say(data.detected
+          ? `📍 You're in ${data.detected} — not a service area yet. Set your city manually below.`
+          : 'Couldn’t match your location to a service area. Set it manually below.', 'info')
       }
-    } catch { /* location unavailable */ }
-  }, [showToast])
+    } catch {
+      say('Couldn’t update your location. Please try again.', 'error')
+    } finally {
+      if (announce) setDetectingLocation(false)
+    }
+  }, [showToast, refreshDashboard])
 
   // Load all data + poll every 15s while logged in; detect current city from GPS on login.
   useEffect(() => {
     if (!dpUser?.id) return
     refreshAll()
-    detectCity({ announce: true })
+    detectCity({ announce: false })   // silent on login; the Profile button announces
     const poll = setInterval(refreshDashboard, 15000)
     return () => clearInterval(poll)
   }, [dpUser?.id, refreshAll, refreshDashboard, detectCity])
@@ -822,7 +850,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     handleAcceptGiftOrder, handleDeclineGiftOrder, openGiftOrderDetail, updateGiftStatus,
     giftOtpInput, setGiftOtpInput, generateGiftOtp, verifyGiftOtp,
     depositCash, changePassword,
-    cities, updateCity, detectCity,
+    cities, updateCity, detectCity, detectingLocation,
     openMaps, callCustomer, contactSupport,
   }
 

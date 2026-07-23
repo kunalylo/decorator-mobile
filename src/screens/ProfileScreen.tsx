@@ -11,7 +11,7 @@ import { useSafeArea } from '../lib/useSafeArea'
 import { rs } from '../lib/utils'
 
 export default function ProfileScreen() {
-  const { dpUser, earnings, handleLogout, changePassword, loading, cities, updateCity, detectCity } = useApp()
+  const { dpUser, earnings, handleLogout, changePassword, loading, cities, updateCity, detectCity, detectingLocation } = useApp()
   const { headerTop } = useSafeArea()
   const e = earnings || ({} as any)
 
@@ -73,8 +73,8 @@ export default function ProfileScreen() {
             <Text style={[styles.cityValue, { color: dpUser?.city ? '#16a34a' : aurora.pink }]}>{dpUser?.city || 'Not set'}</Text>
           </View>
           <Text style={styles.cityHint}>Auto-detected from your location — you only get orders from the city you're currently in.</Text>
-          <TouchableOpacity style={styles.detectBtn} disabled={loading} onPress={() => detectCity({ announce: true })} activeOpacity={0.85}>
-            <Text style={styles.detectBtnText}>📍  Update from my location</Text>
+          <TouchableOpacity style={[styles.detectBtn, detectingLocation && { opacity: 0.7 }]} disabled={loading || detectingLocation} onPress={() => detectCity({ announce: true })} activeOpacity={0.85}>
+            <Text style={styles.detectBtnText}>{detectingLocation ? '📍  Detecting your location…' : '📍  Update from my location'}</Text>
           </TouchableOpacity>
           <Text style={[styles.cityHint, { marginTop: 10, marginBottom: 6 }]}>or set it manually:</Text>
           <View style={styles.cityChips}>
